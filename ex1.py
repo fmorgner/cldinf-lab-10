@@ -42,11 +42,8 @@ class SimpleSwitch13(app_manager.RyuApp):
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
             return
-        dst = eth.dst
-        src = eth.src
-	dpid = datapath.id
 
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+        self.logger.info("packet in %s %s %s %s", datapath.id, eth.src, eth.dst, in_port)
 
         out_port = ofproto.OFPP_FLOOD
 
