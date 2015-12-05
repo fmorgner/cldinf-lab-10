@@ -11,8 +11,9 @@ lines = f.read().split("\n") # "\r\n" if needed
 rule = [ ]
 
 for line in lines:
-    if re.match(pattern, line):
-        rule.append(tuple(line.split(',')))
-    else:
-        print "Line: '" + line + "' is not valid"
+    if line != "":
+        if re.match(pattern, line):
+            rule.append(tuple(line.split(',')))
+        else:
+            print "Line: '" + line + "' is not valid"
 
