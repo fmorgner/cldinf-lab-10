@@ -13,4 +13,6 @@ rule = [ ]
 for line in lines:
     if re.match(pattern, line):
         rule.append(tuple(line.split(',')))
+    else:
+        print "Line: '" + line + "' is not valid"
 
