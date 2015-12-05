@@ -1,11 +1,8 @@
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import MAIN_DISPATCHER, CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from ryu.lib.packet import packet
-from ryu.lib.packet import ethernet
-from ryu.lib.packet import ether_types
 
 class SimpleSwitch13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -15,31 +12,29 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def features(self, ev):
-        datapath = ev.msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        match = parser.OFPMatch()
-        actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        mod = parser.OFPFlowMod(datapath=datapath, priority=0, match=match, instructions=inst)
-        datapath.send_msg(mod)
+        dpth = ev.msg.datapath
+        pars = dpth.ofproto_parser
+        mtch = pars.OFPMatch()
+        acts = [pars.OFPActionOutput(dpth.ofproto.OFPP_FLOOD)]
+        inst = [pars.OFPInstructionActions(dpth.ofproto.OFPIT_APPLY_ACTIONS,
+                                           acts)]
+        modi = pars.OFPFlowMod(datapath=dpth, priority=0, match=mtch,
+                               instructions=inst)
+        dpth.send_msg(modi)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in(self, ev):
         msg = ev.msg
-        datapath = msg.datapath
-        parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
+        dpth = msg.datapath
+        pars = dpth.ofproto_parser
+        inpt = msg.match['in_port']
 
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocols(ethernet.ethernet)[0]
-
-        actions = [parser.OFPActionOutput(datapath.ofproto.OFPP_FLOOD)]
+        acts = [pars.OFPActionOutput(dpth.ofproto.OFPP_FLOOD)]
 
         data = None
-        if msg.buffer_id == datapath.ofproto.OFP_NO_BUFFER:
+        if msg.buffer_id == dpth.ofproto.OFP_NO_BUFFER:
             data = msg.data
 
-        out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
-                                  in_port=msg.match['in_port'], actions=actions, data=data)
-        datapath.send_msg(out)
+        out = parser.OFPPacketOut(datapath=dpth, buffer_id=msg.buffer_id,
+                                  inpt=msg.match['in_port'], actions=acts, data=data)
+        dpth.send_msg(out)
